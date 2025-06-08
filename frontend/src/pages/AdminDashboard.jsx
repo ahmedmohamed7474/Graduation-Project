@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import ProductModal from '../components/ProductModal';
 
 const AdminDashboard = () => {
   const { logout } = useAuth();
@@ -25,6 +26,20 @@ const AdminDashboard = () => {
     image: null,
     imagePreview: null,
   });
+
+  // Reset form when selectedProduct changes
+  useEffect(() => {
+    if (selectedProduct) {
+      setProductForm({
+        name: selectedProduct.name,
+        description: selectedProduct.description,
+        price: selectedProduct.price,
+        stockQuantity: selectedProduct.stockQuantity,
+        image: null,
+        imagePreview: selectedProduct.images?.[0]?.imageUrl || null,
+      });
+    }
+  }, [selectedProduct]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -117,6 +132,64 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleEditClick = (product) => {
+    setSelectedProduct(product);
+    setProductForm({
+      name: product.name,
+      description: product.description,
+      price: product.price.toString(),
+      stockQuantity: product.stockQuantity.toString(),
+      image: null,
+      imagePreview: product.images?.[0]?.imageUrl || product.imageUrl
+    });
+    setShowEditModal(true);
+  };
+
+  const handleProductEdit = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('token');
+    try {
+      const formData = new FormData();
+      formData.append('name', productForm.name);
+      formData.append('description', productForm.description);
+      formData.append('price', productForm.price);
+      formData.append('stockQuantity', productForm.stockQuantity);
+      if (productForm.image) {
+        formData.append('images', productForm.image);
+      }
+
+      const res = await fetch(`http://localhost:3002/api/products/${selectedProduct.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`
+          // Don't set Content-Type header when sending FormData
+        },
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setShowEditModal(false);
+        setSelectedProduct(null);
+        setProductForm({
+          name: "",
+          description: "",
+          price: "",
+          stockQuantity: "",
+          image: null,
+          imagePreview: null,
+        });
+        fetchDashboardData();
+        setError('');
+      } else {
+        setError(data.message || 'Failed to update product');
+      }
+    } catch (err) {
+      setError('Error updating product');
+      console.error(err);
+    }
+  };
+
   const handleProductDelete = async (productId) => {
     const token = localStorage.getItem('token');
     try {
@@ -165,6 +238,19 @@ const AdminDashboard = () => {
       console.error(err);
     }
   };
+
+  useEffect(() => {
+    if (selectedProduct) {
+      setProductForm({
+        name: selectedProduct.name,
+        description: selectedProduct.description,
+        price: selectedProduct.price.toString(),
+        stockQuantity: selectedProduct.stockQuantity.toString(),
+        image: null,
+        imagePreview: selectedProduct.images?.[0]?.imageUrl || selectedProduct.imageUrl,
+      });
+    }
+  }, [selectedProduct]);
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
@@ -246,8 +332,14 @@ const AdminDashboard = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button
+                          onClick={() => handleEditClick(product)}
+                          className="text-blue-600 hover:text-blue-900 mr-4"
+                        >
+                          Edit
+                        </button>
+                        <button
                           onClick={() => handleProductDelete(product.id)}
-                          className="text-red-600 hover:text-red-900 ml-4"
+                          className="text-red-600 hover:text-red-900"
                         >
                           Delete
                         </button>
@@ -337,125 +429,38 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Add Product Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
-            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-              <div className="sm:flex sm:items-start">
-                <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">Add New Product</h3>
-                  <form onSubmit={handleProductSubmit} className="mt-4">
-                    <div className="space-y-4">
-                      <div>
-                        <label htmlFor="name" className="block text-sm font-medium text-gray-700">Product Name</label>
-                        <input
-                          type="text"
-                          id="name"
-                          value={productForm.name}
-                          onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
-                        <textarea
-                          id="description"
-                          value={productForm.description}
-                          onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                          rows="3"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="price" className="block text-sm font-medium text-gray-700">Price</label>
-                        <input
-                          type="number"
-                          id="price"
-                          value={productForm.price}
-                          onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                          required
-                          min="0"
-                          step="0.01"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="stock" className="block text-sm font-medium text-gray-700">Stock Quantity</label>
-                        <input
-                          type="number"
-                          id="stock"
-                          value={productForm.stockQuantity}
-                          onChange={(e) => setProductForm({ ...productForm, stockQuantity: e.target.value })}
-                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                          required
-                          min="0"
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="image" className="block text-sm font-medium text-gray-700">Product Image</label>
-                        <div className="mt-1 flex items-center">
-                          <input
-                            type="file"
-                            id="image"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files[0];
-                              if (file) {
-                                setProductForm({
-                                  ...productForm,
-                                  image: file,
-                                  imagePreview: URL.createObjectURL(file)
-                                });
-                              }
-                            }}
-                            className="sr-only"
-                          />
-                          <label
-                            htmlFor="image"
-                            className="cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                          >
-                            Choose Image
-                          </label>
-                          {productForm.imagePreview && (
-                            <div className="ml-4 h-16 w-16 border rounded-md overflow-hidden">
-                              <img
-                                src={productForm.imagePreview}
-                                alt="Preview"
-                                className="h-full w-full object-cover"
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-                      <button
-                        type="submit"
-                        className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
-                      >
-                        Add Product
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowAddModal(false)}
-                        className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ProductModal
+        show={showAddModal}
+        onHide={() => setShowAddModal(false)}
+        title="Add New Product"
+        submitText="Add Product"
+        handleSubmit={handleProductSubmit}
+        productForm={productForm}
+        setProductForm={setProductForm}
+        error={error}
+      />
+
+      <ProductModal
+        show={showEditModal}
+        onHide={() => {
+          setShowEditModal(false);
+          setSelectedProduct(null);
+          setProductForm({
+            name: "",
+            description: "",
+            price: "",
+            stockQuantity: "",
+            image: null,
+            imagePreview: null,
+          });
+        }}
+        title="Edit Product"
+        submitText="Update Product"
+        handleSubmit={handleProductEdit}
+        productForm={productForm}
+        setProductForm={setProductForm}
+        error={error}
+      />
 
       {error && (
         <div className="fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">

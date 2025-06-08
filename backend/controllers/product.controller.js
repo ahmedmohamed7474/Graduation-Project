@@ -54,23 +54,29 @@ class ProductController {
         } catch (error) {
             res.status(500).json({ message: 'حدث خطأ أثناء جلب بيانات المنتج', error: error.message });
         }
-    }
-
-    async updateProduct(req, res) {
+    }    async updateProduct(req, res) {
         try {
             const { id } = req.params;
             const { name, description, price, stockQuantity } = req.body;
             
+            if (!name || !description || !price || !stockQuantity) {
+                return res.status(400).json({ message: 'Missing required fields' });
+            }
+
             const updateData = {
                 name,
                 description,
                 price: parseFloat(price),
                 stockQuantity: parseInt(stockQuantity)
             };
-
+            
             if (req.files && req.files.length > 0) {
+                const baseUrl = `${req.protocol}://${req.get('host')}`;
                 updateData.images = {
-                    create: req.files.map(file => ({ imageUrl: file.path }))
+                    deleteMany: {},
+                    create: req.files.map(file => ({
+                        imageUrl: `${baseUrl}/uploads/${file.filename}`
+                    }))
                 };
             }
 

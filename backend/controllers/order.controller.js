@@ -135,20 +135,38 @@ class OrderController {
         } catch (error) {
             res.status(500).json({ message: 'حدث خطأ أثناء جلب بيانات الطلب', error: error.message });
         }
-    }
-
-    async updateOrderStatus(req, res) {
+    }    async updateOrderStatus(req, res) {
         try {
             const { id } = req.params;
             const { status } = req.body;
 
-            const order = await orderRepository.updateStatus(parseInt(id), status);
+            // Get the current order to check its status and items
+            const currentOrder = await orderRepository.findById(parseInt(id));
+            if (!currentOrder) {
+                return res.status(404).json({ message: 'Order not found' });
+            }
+
+            // If the order is being cancelled, restore stock quantities
+            if (status === 'CANCELLED' && currentOrder.status !== 'CANCELLED') {
+                // Restore stock for each item
+                for (const item of currentOrder.items) {
+                    const product = await productRepository.findById(item.productId);
+                    if (product) {
+                        await productRepository.updateStock(
+                            product.id,
+                            product.stockQuantity + item.quantity
+                        );
+                    }
+                }
+            }
+
+            const updatedOrder = await orderRepository.updateStatus(parseInt(id), status);
             res.json({
-                message: 'تم تحديث حالة الطلب بنجاح',
-                order
+                message: 'Order status updated successfully',
+                order: updatedOrder
             });
         } catch (error) {
-            res.status(500).json({ message: 'حدث خطأ أثناء تحديث حالة الطلب', error: error.message });
+            res.status(500).json({ message: 'Error updating order status', error: error.message });
         }
     }
 

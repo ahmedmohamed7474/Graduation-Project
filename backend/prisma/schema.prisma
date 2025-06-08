@@ -50,6 +50,7 @@ model Product {
   description    String?
   price          Float
   stockQuantity  Int             @default(0)
+  isSoldOut      Boolean         @default(false)
   images         ProductImage[]  @relation("ProductImages")
   reviews        Review[]        @relation("ProductReviews")
   cartItems      CartItem[]      @relation("ProductInCarts")
