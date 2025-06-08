@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Virtual Glasses Try-On</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .preview {
+            max-width: 100%;
+            margin-top: 20px;
+        }
+        select, button {
+            padding: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Virtual Glasses Try-On</h1>
+        
+        <div>
+            <label for="glassesStyle">Select Glasses Style:</label>
+            <select id="glassesStyle">
+                <option value="1">Style 1</option>
+                <option value="2">Style 2</option>
+                <option value="3">Style 3</option>
+            </select>
+        </div>
+        
+        <div>
+            <input type="file" id="imageInput" accept="image/*">
+            <button onclick="processImage()">Try On Glasses</button>
+        </div>
+        
+        <div>
+            <h3>Result:</h3>
+            <img id="resultImage" class="preview" style="display: none;">
+        </div>
+    </div>
+
+    <script>
+        async function processImage() {
+            const fileInput = document.getElementById('imageInput');
+            const glassesStyle = document.getElementById('glassesStyle').value;
+            const resultImage = document.getElementById('resultImage');
+            
+            if (!fileInput.files[0]) {
+                alert('Please select an image first');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            try {
+                const response = await fetch(`http://localhost:8000/process-image/?glasses_id=${glassesStyle}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                const imageUrl = URL.createObjectURL(blob);
+                resultImage.src = imageUrl;
+                resultImage.style.display = 'block';
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error processing image: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>
