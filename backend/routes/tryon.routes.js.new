@@ -5,32 +5,6 @@ const multer = require('multer');
 const { spawn } = require('child_process');
 const fs = require('fs');
 
-// Helper function to copy file
-const copyFile = async (src, dest) => {
-    return new Promise((resolve, reject) => {
-        fs.copyFile(src, dest, (err) => {
-            if (err) reject(err);
-            else resolve();
-        });
-    });
-};
-
-// Ensure required directories exist
-const ensureDirectories = () => {
-    const baseDir = path.join(__dirname, '../../test_grad/test_grad');
-    const dirs = [
-        path.join(baseDir, 'test_images'),
-        path.join(baseDir, 'results'),
-        path.join(baseDir, 'glasses_images')
-    ];
-    
-    dirs.forEach(dir => {
-        if (!fs.existsSync(dir)) {
-            fs.mkdirSync(dir, { recursive: true });
-        }
-    });
-};
-
 // Configure multer for file upload
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -125,41 +99,23 @@ router.post('/try-on-glasses', upload.single('image'), async (req, res) => {
         if (!req.file) {
             return res.status(400).json({ message: 'No image file uploaded' });
         }
-        
-        if (!req.body.glassesImage) {
-            return res.status(400).json({ message: 'No glasses image specified' });
-        }
 
-        // Ensure directories exist
-        ensureDirectories();
-        
         const inputImage = req.file.filename;
         const baseDir = path.join(__dirname, '../../test_grad/test_grad');
-        const testImagesDir = path.join(baseDir, 'test_images');
-        const inputPath = path.join(testImagesDir, inputImage);
-        const outputDir = path.join(baseDir, 'results');        const scriptPath = path.join(baseDir, 'tryon_glasses_mediapipe.py');
-        const backendDir = path.join(__dirname, '..');
-        const glassesSourcePath = path.join(backendDir, 'uploads', req.body.glassesImage);
-        const glassesDestPath = path.join(baseDir, 'glasses_images', req.body.glassesImage);
-
-        // Copy glasses image to the correct location
-        try {
-            await copyFile(glassesSourcePath, glassesDestPath);
-        } catch (err) {
-            console.error('Error copying glasses file:', err);
-            throw new Error('Could not access glasses image');
-        }
-          console.log('Running glasses try-on:', { 
+        const scriptPath = path.join(baseDir, 'test_real_image.py');
+        const inputPath = path.join(baseDir, 'test_images', inputImage);
+        const outputDir = path.join(baseDir, 'results');
+        
+        console.log('Running style transfer:', { 
             script: scriptPath,
             input: inputPath,
-            glasses: glassesDestPath,
             output: outputDir 
         });
-          await runPythonScript(scriptPath, inputPath, glassesDestPath, outputDir);
         
-        // Get the output image path from tryon_glasses.py output
-        const outputImage = path.join(outputDir, `${path.parse(inputImage).name}_with_glasses.png`);
-        console.log('Looking for output image at:', outputImage);
+        await runPythonScript(scriptPath, inputPath, outputDir);
+        
+        // Get the output image path - note the _fake.png suffix from CycleGAN
+        const outputImage = path.join(outputDir, `${path.parse(inputImage).name}_fake.png`);
         
         if (!fs.existsSync(outputImage)) {
             throw new Error('Output image was not generated');

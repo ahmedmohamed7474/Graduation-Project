@@ -47,7 +47,12 @@ const Checkout = ({ onClose }) => {
         },
         body: JSON.stringify({
           ...formData,
-          total,
+          items: cart.items.map(item => ({
+            productId: item.product.id,
+            quantity: item.quantity,
+            price: item.product.price
+          })),
+          total: total + (formData.paymentMethod === 'CASH' ? 5 : 0), // Add $5 for cash on delivery
         }),
       });
 

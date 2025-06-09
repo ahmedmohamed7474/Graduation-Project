@@ -16,11 +16,14 @@ class OrderController {
                 error: error.message 
             });
         }
-    }
-
-    async createOrder(req, res) {
+    }    async createOrder(req, res) {
         try {
-            const userId = req.user.userId;
+            // Make sure we have a valid user ID
+            if (!req.user || !req.user.userId) {
+                return res.status(401).json({ message: 'User not authenticated' });
+            }
+
+            const userId = parseInt(req.user.userId); // Convert to integer and ensure we use userId
             const {
                 address,
                 phone,
@@ -31,6 +34,13 @@ class OrderController {
                 cardExpiryYear,
                 cardCvv
             } = req.body;
+
+            // Validate required fields for DEBIT_CARD payment
+            if (paymentMethod === 'DEBIT_CARD') {
+                if (!cardNumber || !cardHolderName || !cardExpiryMonth || !cardExpiryYear || !cardCvv) {
+                    return res.status(400).json({ message: 'All card details are required for debit card payment' });
+                }
+            }
 
             // Get user's cart
             const cart = await cartRepository.findByUserId(userId);
@@ -60,10 +70,9 @@ class OrderController {
                 phone,
                 paymentMethod: paymentMethod === 'CASH' ? 'CASH' : 'DEBIT_CARD',
                 total,
-                cardNumber: paymentMethod === 'CASH' ? null : cardNumber,
-                cardHolderName: paymentMethod === 'CASH' ? null : cardHolderName,
-                cardExpiryMonth: paymentMethod === 'CASH' ? null : cardExpiryMonth,
-                cardExpiryYear: paymentMethod === 'CASH' ? null : cardExpiryYear,
+                cardNumber: paymentMethod === 'CASH' ? null : cardNumber,                cardHolderName: paymentMethod === 'CASH' ? null : cardHolderName,
+                cardExpiryMonth: paymentMethod === 'CASH' ? null : parseInt(cardExpiryMonth),
+                cardExpiryYear: paymentMethod === 'CASH' ? null : parseInt(cardExpiryYear),
                 cardCvv: paymentMethod === 'CASH' ? null : cardCvv,
                 items: cart.items.map(item => ({
                     productId: item.product.id,
@@ -86,9 +95,14 @@ class OrderController {
             res.status(201).json({
                 message: 'تم إنشاء الطلب بنجاح',
                 order
+            });        } catch (error) {
+            console.error('Order creation error:', error);
+            console.error('Stack trace:', error.stack);
+            res.status(500).json({ 
+                message: 'Error creating order', 
+                error: error.message,
+                details: error.stack 
             });
-        } catch (error) {
-            res.status(500).json({ message: 'حدث خطأ أثناء إنشاء الطلب', error: error.message });
         }
     }
 

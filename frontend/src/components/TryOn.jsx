@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 
 const TryOn = ({ productId, product }) => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [processedImage, setProcessedImage] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [tryOnMode, setTryOnMode] = useState('random'); // 'random' or 'glasses'
 
     const handleFileChange = (event) => {
         setSelectedFile(event.target.files[0]);
         setProcessedImage(null);
         setError(null);
-    };
-
-    const handleSubmit = async () => {
+    };    const handleSubmit = async () => {
         if (!selectedFile) {
             setError('Please select an image first');
             return;
@@ -28,8 +28,28 @@ const TryOn = ({ productId, product }) => {
 
         const formData = new FormData();
         formData.append('image', selectedFile);
-        formData.append('productImage', product.images[0].imageUrl);try {
-            const response = await fetch('http://localhost:3002/api/tryon/try-on', {
+        // Get the image path based on the try-on mode
+        if (tryOnMode === 'glasses') {
+            // Extract the image filename from the URL
+            const glassesImageUrl = product.images[0].imageUrl;
+            // We only need the filename part as the backend will look in the uploads folder
+            const imageName = glassesImageUrl.split('/').pop();
+            // Ensure we have a valid image name
+            if (!imageName) {
+                throw new Error('Invalid glasses image URL');
+            }
+            // Send both the glasses image name and path information
+            formData.append('glassesImage', imageName);
+            formData.append('glassesPath', `/uploads/${imageName}`);
+            formData.append('glassesImageUrl', glassesImageUrl);
+            formData.append('productId', product.id.toString());
+        } else {
+            formData.append('productImage', product.images[0].imageUrl);
+        }
+
+        try {
+            const endpoint = tryOnMode === 'glasses' ? 'try-on-glasses' : 'try-on';
+            const response = await fetch(`http://localhost:3002/api/tryon/${endpoint}`, {
                 method: 'POST',
                 body: formData,
             });
@@ -59,8 +79,30 @@ const TryOn = ({ productId, product }) => {
     };
 
     return (
-        <div className="p-4">
-            <div className="mb-4">
+        <div className="p-4">            <div className="mb-4 space-y-4">
+                <div className="flex justify-center space-x-4">
+                    <button
+                        onClick={() => setTryOnMode('random')}
+                        className={`px-4 py-2 rounded-md ${
+                            tryOnMode === 'random'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-200 text-gray-700'
+                        }`}
+                    >
+                        Random Style
+                    </button>
+                    <button
+                        onClick={() => setTryOnMode('glasses')}
+                        className={`px-4 py-2 rounded-md ${
+                            tryOnMode === 'glasses'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-200 text-gray-700'
+                        }`}
+                    >
+                        Exact Glasses
+                    </button>
+                </div>
+
                 <input
                     type="file"
                     accept="image/*"

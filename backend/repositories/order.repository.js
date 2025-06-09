@@ -2,13 +2,21 @@ const prisma = require('../prisma/client');
 
 class OrderRepository {
     async createWithItems(orderData) {
-        const { items, ...orderDetails } = orderData;
-        
-        return prisma.$transaction(async (prisma) => {
-            // Create the order
+        const { items, userId, ...orderDetails } = orderData;
+        try {
+            // Create order with proper user connection and validate userId
+            if (!userId || typeof userId !== 'number') {
+                throw new Error('Invalid user ID');
+            }
+
             const order = await prisma.order.create({
                 data: {
                     ...orderDetails,
+                    user: {
+                        connect: {
+                            id: userId
+                        }
+                    },
                     items: {
                         create: items
                     }
@@ -35,97 +43,98 @@ class OrderRepository {
             }
 
             return order;
-        });
+        } catch (error) {
+            console.error('Error in createWithItems:', error);
+            throw error;
+        }
     }
 
     async findByUserId(userId) {
-        return prisma.order.findMany({
-            where: {
-                userId: userId
-            },
-            include: {
-                user: true,
-                items: {
-                    include: {
-                        product: {
-                            include: {
-                                images: true
+        try {
+            return await prisma.order.findMany({
+                where: { userId },
+                include: {
+                    items: {
+                        include: {
+                            product: {
+                                include: {
+                                    images: true
+                                }
                             }
                         }
                     }
+                },
+                orderBy: {
+                    createdAt: 'desc'
                 }
-            },
-            orderBy: {
-                createdAt: 'desc'
-            }
-        });
+            });
+        } catch (error) {
+            console.error('Error in findByUserId:', error);
+            throw error;
+        }
     }
 
     async findAll() {
-        return prisma.order.findMany({
-            include: {
-                user: true,
-                items: {
-                    include: {
-                        product: {
-                            include: {
-                                images: true
+        try {
+            return await prisma.order.findMany({
+                include: {
+                    user: true,
+                    items: {
+                        include: {
+                            product: {
+                                include: {
+                                    images: true
+                                }
                             }
                         }
                     }
+                },
+                orderBy: {
+                    createdAt: 'desc'
                 }
-            },
-            orderBy: {
-                createdAt: 'desc'
-            }
-        });
+            });
+        } catch (error) {
+            console.error('Error in findAll:', error);
+            throw error;
+        }
     }
 
     async findById(id) {
-        return prisma.order.findUnique({
-            where: { id },
-            include: {
-                user: true,
-                items: {
-                    include: {
-                        product: true
-                    }
-                }
-            }
-        });    }
-    
-    async findByUserId(userId) {
-        return prisma.order.findMany({
-            where: { userId },
-            orderBy: {
-                createdAt: 'desc'
-            },
-            include: {
-                items: {
-                    include: {
-                        product: {
-                            include: {
-                                images: true
-                            }
+        try {
+            return await prisma.order.findUnique({
+                where: { id },
+                include: {
+                    user: true,
+                    items: {
+                        include: {
+                            product: true
                         }
                     }
                 }
-            }
-        });
+            });
+        } catch (error) {
+            console.error('Error in findById:', error);
+            throw error;
+        }
     }
 
     async updateStatus(id, status) {
-        return prisma.order.update({
-            where: { id },
-            data: { status },
-            include: {
-                items: {
-                    include: {
-                        product: true
+        try {
+            return await prisma.order.update({
+                where: { id },
+                data: { status },
+                include: {
+                    items: {
+                        include: {
+                            product: true
+                        }
                     }
                 }
-            }
-        });
+            });
+        } catch (error) {
+            console.error('Error in updateStatus:', error);
+            throw error;
+        }
     }
 }
 

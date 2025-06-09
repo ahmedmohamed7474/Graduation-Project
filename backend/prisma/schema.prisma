@@ -124,4 +124,5 @@ model OrderItem {
   productId       Int
   quantity        Int
   priceAtPurchase Float     // capture price at time of purchase
+  tryOnImageUrl   String?   // URL for the virtual try-on image
 }
