@@ -42,9 +42,9 @@ async def health_check():
     }
 
 @app.post("/process-image/")
-async def process_image(file: UploadFile = File(...)):
+async def process_image(file: UploadFile = File(...), glasses_id: str = None):
     """
-    Process an uploaded image using the trained GAN models
+    Process an uploaded image by adding virtual glasses using OpenCV and face landmarks
     """
     try:
         print(f"Processing file: {file.filename}")
@@ -60,8 +60,29 @@ async def process_image(file: UploadFile = File(...)):
                 detail="Invalid image file"
             )
             
-        # Process the image
-        result_img = model_loader.process_image(img)
+        # Save temporary file for processing
+        temp_dir = Path("temp")
+        temp_dir.mkdir(exist_ok=True)
+        temp_path = temp_dir / file.filename
+        cv2.imwrite(str(temp_path), img)
+        
+        # Get glasses path if ID provided
+        glasses_path = None
+        if glasses_id:
+            glasses_dir = Path("glasses_images")
+            potential_path = glasses_dir / f"glasses_{glasses_id}.png"
+            if potential_path.exists():
+                glasses_path = str(potential_path)
+        
+        # Process the image with our new overlay
+        from app.utils.glasses_overlay import GlassesOverlay
+        overlay = GlassesOverlay()
+        try:
+            result_img = overlay.process_image(str(temp_path), glasses_path)
+        finally:
+            # Clean up temp file
+            if temp_path.exists():
+                temp_path.unlink()
         
         # Convert the result image to bytes
         _, encoded_img = cv2.imencode('.png', result_img)

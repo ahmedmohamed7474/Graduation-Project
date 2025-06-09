@@ -156,54 +156,69 @@ if __name__ == '__main__':
     except Exception as e:
         print(f"Debug endpoint error: {str(e)}")
 
-def test_with_real_image(image_path):
-    # Now try the main endpoint
-    url = "http://localhost:8000/process-image/"
-    
-    try:
-        # Verify image exists
-        if not Path(image_path).exists():
-            print(f"Error: Image file not found at {image_path}")
-            return
+def process_image(input_path, output_dir, model_path=None):
+    if model_path is None:
+        # Use default model path relative to script location
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        model_path = os.path.join(script_dir, '83_net_G_A.pth')
 
-        # Read image to verify it's valid
-        img = cv2.imread(image_path)
-        if img is None:
-            print(f"Error: Could not read image file {image_path}")
-            return
+    try:
+        print(f"Loading model from: {model_path}")
+        # Load model
+        netG = ResnetGenerator()
+        state_dict = torch.load(model_path, map_location=torch.device('cpu'))
+        netG.load_state_dict(state_dict)
+        netG.eval()
+
+        # Load and preprocess image
+        print(f"Processing image: {input_path}")
+        img = Image.open(input_path).convert('RGB')
+        transform = transforms.Compose([
+            transforms.Resize(256),
+            transforms.ToTensor(),
+            transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        ])
+        img_tensor = transform(img).unsqueeze(0)
+
+        # Generate output
+        with torch.no_grad():
+            fake = netG(img_tensor)
             
-        print(f"Processing image: {image_path}")
+        # Convert to image
+        fake = fake.squeeze().cpu().float().numpy()
+        fake = (np.transpose(fake, (1, 2, 0)) + 1) / 2.0 * 255.0
+        fake = fake.astype(np.uint8)
+
+        # Save output
+        input_filename = os.path.basename(input_path)
+        output_filename = f"{os.path.splitext(input_filename)[0]}_fake.png"
+        output_path = os.path.join(output_dir, output_filename)
         
-        # Send request to API
-        with open(image_path, "rb") as f:
-            files = {"file": f}
-            print("Sending request to API...")
-            response = requests.post(url, files=files)
+        # Ensure output directory exists
+        os.makedirs(output_dir, exist_ok=True)
         
-        if response.status_code == 200:
-            # Create output filename
-            input_path = Path(image_path)
-            output_path = input_path.parent / f"result_{input_path.name}"
-            
-            # Save result
-            with open(output_path, "wb") as f:
-                f.write(response.content)
-            print(f"Success! Result saved to: {output_path}")
-        else:
-            print(f"Error: API returned status code {response.status_code}")
-            print(f"Response: {response.text}")
-            
+        # Save as PNG
+        output_image = Image.fromarray(fake)
+        output_image.save(output_path)
+        
+        print(f"Output saved to: {output_path}")
+        return True
+        
     except Exception as e:
         print(f"Error occurred: {str(e)}")
+        return False
 
 def main():
-    if len(sys.argv) != 2:
-        print("Usage: python test_real_image.py <path_to_image>")
-        print("Example: python test_real_image.py test_images/face.jpg")
+    if len(sys.argv) < 3:
+        print("Usage: python test_real_image.py <input_image> <output_dir> [model_path]")
         return
         
-    image_path = sys.argv[1]
-    test_with_real_image(image_path)
+    input_path = sys.argv[1]
+    output_dir = sys.argv[2]
+    model_path = sys.argv[3] if len(sys.argv) > 3 else None
+    
+    success = process_image(input_path, output_dir, model_path)
+    sys.exit(0 if success else 1)
 
 if __name__ == "__main__":
     main()
