@@ -200,13 +200,15 @@ const AdminDashboard = () => {
         },
       });
 
+      const data = await res.json();
+      
       if (res.ok) {
         fetchDashboardData();
       } else {
-        setError('Failed to delete product');
+        setError(data.message || 'Failed to delete product');
       }
     } catch (err) {
-      setError('Error deleting product');
+      setError('Error deleting product. Please try again.');
       console.error(err);
     }
   };

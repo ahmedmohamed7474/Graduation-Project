@@ -89,7 +89,7 @@ const Checkout = ({ onClose }) => {
             value={formData.address}
             onChange={handleChange}
             required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
             rows="3"
           />
         </div>
@@ -104,7 +104,7 @@ const Checkout = ({ onClose }) => {
             value={formData.phone}
             onChange={handleChange}
             required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
           />
         </div>
 
@@ -116,7 +116,7 @@ const Checkout = ({ onClose }) => {
             name="paymentMethod"
             value={formData.paymentMethod}
             onChange={handleChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
           >
             <option value="CASH">Cash on Delivery</option>
             <option value="DEBIT_CARD">Debit Card</option>
@@ -135,7 +135,7 @@ const Checkout = ({ onClose }) => {
                 value={formData.cardNumber}
                 onChange={handleChange}
                 required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
               />
             </div>
 
@@ -149,7 +149,7 @@ const Checkout = ({ onClose }) => {
                 value={formData.cardHolderName}
                 onChange={handleChange}
                 required
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
               />
             </div>
 
@@ -165,7 +165,7 @@ const Checkout = ({ onClose }) => {
                   onChange={handleChange}
                   placeholder="MM"
                   required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
                 />
               </div>
               <div>
@@ -179,7 +179,7 @@ const Checkout = ({ onClose }) => {
                   onChange={handleChange}
                   placeholder="YY"
                   required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
                 />
               </div>
               <div>
@@ -192,7 +192,7 @@ const Checkout = ({ onClose }) => {
                   value={formData.cardCvv}
                   onChange={handleChange}
                   required
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-white text-gray-900"
                 />
               </div>
             </div>
