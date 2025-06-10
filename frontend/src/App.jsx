@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import "./App.css";
 import ProductCard from "./components/ProductCard";
-import TeamMember from "./components/TeamMember";
+
 import TryOnModal from "./components/TryOnModal";
+import FaceShapeAnalyzer from "./components/FaceShapeAnalyzer";
 import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import CartIcon from "./components/CartIcon";
@@ -16,60 +17,9 @@ import Signup from "./pages/Signup";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 
-// Import team member images
-import teamMember1 from "./assets/teamMembers/teamMember1.jpg";
-import teamMember2 from "./assets/teamMembers/teamMember2.jpg";
-import teamMember3 from "./assets/teamMembers/teamMember3.jpg";
-import teamMember4 from "./assets/teamMembers/teamMember4.jpg";
-import teamMember5 from "./assets/teamMembers/teamMember5.jpg";
 
-const teamMembers = [
-  {
-    id: 1,
-    name: "Ahmed Mohamed",
-    role: "AI Engineer",
-    roleDescription:
-      "Specializing in facial recognition and landmark detection for precise virtual eyewear placement",
-    linkedIn: "https://linkedin.com",
-    image: teamMember1,
-  },
-  {
-    id: 2,
-    name: "Omar Mohamed",
-    role: "AI Engineer",
-    roleDescription:
-      "Focusing on real-time 3D modeling and rendering of eyewear using advanced computer vision techniques",
-    linkedIn: "https://linkedin.com",
-    image: teamMember2,
-  },
-  {
-    id: 3,
-    name: "Ziad Ahmed",
-    role: "Full Stack Developer",
-    roleDescription:
-      "Architecting the backend infrastructure using Node.js and AWS, ensuring scalable and secure processing of virtual try-on requests",
-    linkedIn: "https://linkedin.com",
-    image: teamMember3,
-  },
-  {
-    id: 4,
-    name: "Ziad Tamer",
-    role: "AI Engineer",
-    roleDescription:
-      "Expert in deep learning algorithms for realistic lighting and shadow simulation in virtual try-on experiences",
-    linkedIn: "https://linkedin.com",
-    image: teamMember4,
-  },
-  {
-    id: 5,
-    name: "Amir Salama",
-    role: "Full Stack Developer",
-    roleDescription:
-      "Leading the frontend development with React and Three.js, creating immersive 3D try-on experiences and responsive user interfaces",
-    linkedIn: "https://linkedin.com",
-    image: teamMember5,
-  },
-];
+
+
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -124,9 +74,13 @@ function App() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex justify-between h-16">
                 <div className="flex items-center space-x-2">
-                  <Link to="/" className="text-xl font-bold text-gray-900">
-                    SmartStyle
-                  </Link>
+                  {user?.roleId === 1 ? (
+                    <span className="text-xl font-bold text-gray-900">SmartStyle</span>
+                  ) : (
+                    <Link to="/" className="text-xl font-bold text-gray-900">
+                      SmartStyle
+                    </Link>
+                  )}
                 </div>
                 <div className="flex items-center space-x-4">
                   {user ? (
@@ -190,6 +144,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/orders" element={<Orders />} />
+              <Route path="/face-analysis" element={<FaceShapeAnalyzer />} />
               <Route
                 path="/admin"
                 element={
@@ -206,8 +161,7 @@ function App() {
                     <section className="relative min-h-[90vh] flex items-center justify-center px-4 overflow-hidden">
                       {/* Background gradient */}
                       <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-blue-100 opacity-90" />
-                      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiA0NGM0LjQxOCAwIDgtMy41ODIgOC04cy0zLjU4Mi04LTgtOC04IDMuNTgyLTggOCAzLjU4MiA4IDggOHoiIGZpbGw9IiNlZWYiLz48cGF0aCBkPSJNMzYgNDRjNC40MTggMCA4LTMuNTgyIDgtOHMtMy41ODItOC04LTgtOCAzLjU4Mi04IDggMy41ODIgOCA4IDh6IiBmaWxsPSIjZjVmNWY1Ii8+PC9nPjwvc3ZnPg==')] opacity-10" />
-
+                      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiA0NGM0LjQxOCAwIDgtMy41ODIgOC04cy0zLjU4Mi04LTgtOC04IDMuNTgyLTggOCAzLjU4MiA4IDggOHoiIGZpbGw9IiNlZWYiLz48L2c+PC9zdmc+')] opacity-5" />
                       <div className="relative text-center max-w-4xl mx-auto">
                         <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6 leading-tight">
                           Virtual Try-On
@@ -239,11 +193,11 @@ function App() {
                               />
                             </svg>
                           </button>
-                          <button
-                            onClick={() => setIsCartOpen(true)}
+                          <Link
+                            to="/face-analysis"
                             className="bg-white text-blue-600 px-8 py-4 rounded-full text-lg font-semibold hover:bg-blue-50 transition-all transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 border-2 border-blue-600"
                           >
-                            <span>View Cart</span>
+                            <span>Analyze Face Shape</span>
                             <svg
                               className="w-5 h-5"
                               fill="none"
@@ -254,10 +208,10 @@ function App() {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                                 strokeWidth={2}
-                                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                                d="M13 5l7 7-7 7M5 5l7 7-7 7"
                               />
                             </svg>
-                          </button>
+                          </Link>
                         </div>
                         <div className="mt-12 flex justify-center gap-8 text-gray-500">
                           <div className="flex items-center space-x-2">
@@ -312,6 +266,22 @@ function App() {
                       </div>
                     </section>
 
+                    {/* Face Shape Analysis Section */}
+                    <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50">
+                      <div className="max-w-7xl mx-auto">
+                        <div className="text-center mb-16">
+                          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                            Find Your Perfect Fit
+                          </h2>
+                          <p className="text-gray-600 max-w-2xl mx-auto">
+                            Upload a photo to analyze your face shape and get
+                            personalized frame recommendations
+                          </p>
+                        </div>
+                        <FaceShapeAnalyzer />
+                      </div>
+                    </section>
+
                     {/* Eyeglasses Products Section */}
                     <div
                       ref={glassesRef}
@@ -340,25 +310,7 @@ function App() {
                       </div>
                     </div>
 
-                    {/* Team Members Section */}
-                    <section className="py-16 px-4 sm:px-6 lg:px-8">
-                      <div className="max-w-7xl mx-auto">
-                        <div className="text-center mb-16">
-                          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                            Meet Our Team
-                          </h2>
-                          <p className="text-gray-600 max-w-2xl mx-auto">
-                            The brilliant minds behind our virtual try-on
-                            technology
-                          </p>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                          {teamMembers.map((member) => (
-                            <TeamMember key={member.id} {...member} />
-                          ))}
-                        </div>
-                      </div>
-                    </section>
+
                   </>
                 }
               />

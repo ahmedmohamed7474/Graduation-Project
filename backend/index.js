@@ -15,6 +15,7 @@ const cartItemRoutes = require('./routes/cartitem.routes');
 const orderRoutes = require('./routes/order.routes');
 const orderItemRoutes = require('./routes/orderitem.routes');
 const tryonRoutes = require('./routes/tryon.routes');
+const faceAnalysisRoutes = require('./routes/face-analysis.routes');
 
 const app = express();
 
@@ -44,6 +45,7 @@ app.use('/api/cart-items', cartItemRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/order-items', orderItemRoutes);
 app.use('/api/tryon', tryonRoutes);
+app.use('/api/face-analysis', faceAnalysisRoutes);
 
 // معالجة الأخطاء
 app.use((req, res, next) => {

@@ -51,9 +51,15 @@ const upload = multer({ storage: storage });
 // Helper function to run Python scripts
 const runPythonScript = async (scriptPath, ...args) => {
     return new Promise((resolve, reject) => {
+        if (!fs.existsSync(scriptPath)) {
+            reject(new Error(`Python script not found: ${scriptPath}`));
+            return;
+        }
+
         console.log('Running Python script:', { scriptPath, args });
         const pythonProcess = spawn('python', [scriptPath, ...args]);
         let errorOutput = '';
+        let stdoutOutput = '';
 
         pythonProcess.stderr.on('data', (data) => {
             const error = data.toString();
@@ -62,7 +68,9 @@ const runPythonScript = async (scriptPath, ...args) => {
         });
 
         pythonProcess.stdout.on('data', (data) => {
-            console.log('Python output:', data.toString());
+            const output = data.toString();
+            console.log('Python output:', output);
+            stdoutOutput += output;
         });
 
         pythonProcess.on('close', (code) => {
@@ -137,10 +145,16 @@ router.post('/try-on-glasses', upload.single('image'), async (req, res) => {
         const baseDir = path.join(__dirname, '../../test_grad/test_grad');
         const testImagesDir = path.join(baseDir, 'test_images');
         const inputPath = path.join(testImagesDir, inputImage);
-        const outputDir = path.join(baseDir, 'results');        const scriptPath = path.join(baseDir, 'tryon_glasses_mediapipe.py');
+        const outputDir = path.join(baseDir, 'results');        // First apply the glasses at a fixed position for CycleGAN input
+        const fixedGlassesScript = path.join(baseDir, 'apply_fixed_glasses.py');
         const backendDir = path.join(__dirname, '..');
         const glassesSourcePath = path.join(backendDir, 'uploads', req.body.glassesImage);
         const glassesDestPath = path.join(baseDir, 'glasses_images', req.body.glassesImage);
+        
+        // Parameters for fixed glasses positioning
+        const scale = 1.0;
+        const yOffset = 0.42;
+        const width = 0.8;
 
         // Copy glasses image to the correct location
         try {
@@ -148,14 +162,42 @@ router.post('/try-on-glasses', upload.single('image'), async (req, res) => {
         } catch (err) {
             console.error('Error copying glasses file:', err);
             throw new Error('Could not access glasses image');
-        }
-          console.log('Running glasses try-on:', { 
-            script: scriptPath,
+        }        // First run: Apply fixed glasses
+        console.log('Applying fixed glasses:', { 
+            script: fixedGlassesScript,
             input: inputPath,
             glasses: glassesDestPath,
-            output: outputDir 
+            output: outputDir,
+            params: { scale, yOffset, width }
         });
-          await runPythonScript(scriptPath, inputPath, glassesDestPath, outputDir);
+        
+        try {
+            await runPythonScript(
+                fixedGlassesScript, 
+                inputPath, 
+                glassesDestPath, 
+                outputDir,
+                scale.toString(),
+                yOffset.toString(),
+                width.toString()
+            );
+        } catch (err) {
+            console.error('Error in fixed glasses step:', err);
+            throw new Error(`Fixed glasses error: ${err.message}`);
+        }
+        
+        // Get the intermediate output path (input for CycleGAN)
+        const intermediatePath = path.join(outputDir, `${path.parse(inputImage).name}_with_glasses_input.png`);
+        
+        // Second run: Apply style transfer with CycleGAN
+        const cycleGANScript = path.join(baseDir, 'tryon_glasses.py');
+        console.log('Running style transfer:', {
+            script: cycleGANScript,
+            input: intermediatePath,
+            output: outputDir
+        });
+        
+        await runPythonScript(cycleGANScript, intermediatePath, outputDir);
         
         // Get the output image path from tryon_glasses.py output
         const outputImage = path.join(outputDir, `${path.parse(inputImage).name}_with_glasses.png`);
