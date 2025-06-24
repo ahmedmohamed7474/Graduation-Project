@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # SmartStyle - Virtual Try-On Eyewear Application
 
 <div align="center">
