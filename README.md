@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # SmartStyle - Virtual Try-On Eyewear Application
 
 <div align="center">
@@ -317,3 +318,6 @@ For support and questions:
   <p>Made with ❤️ for the graduation project</p>
   <p>SmartStyle - The Future of Eyewear Shopping</p>
 </div> 
+=======
+hello
+>>>>>>> 54fd6184622b3c7ec5953e2c9893c0fd8d34d170
