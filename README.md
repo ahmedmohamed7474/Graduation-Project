@@ -1,4 +1,4 @@
-# SmartStyle - Virtual Try-On Eyewear Application
+# PROVA - Virtual Try-On Eyewear Application
 
 <div align="center">
   <img src="https://img.shields.io/badge/React-19.0.0-blue?style=for-the-badge&logo=react" alt="React Version" />
