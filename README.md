@@ -72,7 +72,7 @@ Graduation-Project/
 #### 1. Clone the Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/ahmedmohamed7474/Graduation-Project.git
 cd Graduation-Project
 ```
 
