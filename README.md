@@ -294,11 +294,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 👥 Team
 
 This project was developed as a graduation project by:
-- [Ziad Ahmed] - Full Stack Developer
+- [Ziad Ahmed] - Backend Developer/AI/ML Specialist
 - [Amir Salama] - Full Stack Developer
 - [Ziad Tamer] - AI/ML Specialist
 - [Omar Kassem] - AI/ML Specialist
-- [Ahmed Mohamed] - UI/UX Designer
+- [Ahmed Mohamed] - AI/ML Specialist/Full Stack Developer
 
 ## 📞 Support
 
