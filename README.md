@@ -295,16 +295,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 👥 Team
 
 This project was developed as a graduation project by:
-- [Your Name] - Full Stack Developer
-- [Team Member 2] - AI/ML Specialist
-- [Team Member 3] - UI/UX Designer
+- [Ziad Ahmed] - Full Stack Developer
+- [Amir Salama] - Full Stack Developer
+- [Ziad Tamer] - AI/ML Specialist
+- [Omar Kassem] - AI/ML Specialist
+- [Ahmed Mohamed] - UI/UX Designer
 
 ## 📞 Support
 
 For support and questions:
-- Email: [your-email@example.com]
-- Project Issues: [GitHub Issues](https://github.com/yourusername/Graduation-Project/issues)
-
+- Email: [omarten17@gmail.com]
 ## 🙏 Acknowledgments
 
 - MediaPipe team for face detection capabilities
